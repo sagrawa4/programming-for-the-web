@@ -31,13 +31,9 @@ export default class Spreadsheet {
     	{
 	const result=indexToColSpec(j);//converting colmums to index
 	let final= result + i;// concat the row& coulmn to develop a cell
-	//console.log(final);
 	const cellInfo= new CellInfo(final,0,0,0,0);
    	//console.log(cellInfo.id,cellInfo.expr,cellInfo.value,cellInfo.dependents,cellInfo.ast);
 	cellInfo.id=final;
-	//console.log("Inside Constructor" ,cellInfo.id);
-	//this.cellInfo.id=this.id;
-	
 	}
     }
   }
@@ -51,25 +47,25 @@ export default class Spreadsheet {
    *  syntax error and `CIRCULAR_REF` for a circular reference
    *  and message property set to a suitable error message.
    */
-  async eval(baseCellId, expr) {
-    const updates = {};
+  async eval(baseCellId, expr) {    const updates = {};
     CellInfo.id=baseCellId;
     CellInfo.expr=expr;
-    updates[CellInfo.id]=CellInfo.expr;
-    //console.log(updates);
     const parseOutput= parse(CellInfo.expr,CellInfo.id);
-    console.log(inspect(parseOutput,false,Infinity));
-
-    function evalAst(parseOutput){
-    console.log("value is",this.parseOutput.value);
-    return parseOutput.value
+    console.log(inspect(parseOutput,false,Infinity));//To print AST
+    if(parseOutput.type==='num')
+    {
+	updates[CellInfo.id]=parseOutput.value;
+	console.log(parseOutput.kids.value);
     }
-    
-    return evalAst(updates);
+    if(parseOutput.type==='app')
+    {
+	//parseOutput.kids.unit=parseOutput.value;
+	console.log("kids", parseOutput.value.toString());
+	//Math.eval(parseOutput.kids.value=parseOutput.value)
+    }
+
+    return updates;
   }
-
-
-
   //TODO add methods
 }
 
