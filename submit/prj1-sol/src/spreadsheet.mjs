@@ -10,10 +10,11 @@ import { inspect } from 'util';
 
 class CellInfo{
 
-constructor(id,expr,value,dependents,ast){
-this.id=id;
-this.expr=expr;
-this.value=0;
+constructor(id,expr,value,dependents,ast)
+{
+   this.id=id;
+   this.expr=expr;
+   this.value=0;
 this.dependents=dependents;
 this.ast=ast;
 }
@@ -25,18 +26,19 @@ export default class Spreadsheet
   //factory method
   static async make() { return new Spreadsheet(); }
 
+  
   constructor()
-  {    //@TODO
+  {
+  this.myMap = new Map();
     for(let i=1;i<=LIMITS.MAX_N_ROWS;i++)
     {
 	for(let j=0;j<LIMITS.MAX_N_COLS;j++)
     	{
-	const result=indexToColSpec(j);//converting colmums to index
-	let final= result + i;// concat the row& coulmn to develop a cell
-	const cellInfo= new CellInfo(final,0,0,0,0);
-   	//console.log(cellInfo.id,cellInfo.expr,cellInfo.value,cellInfo.dependents,cellInfo.ast);
-	cellInfo.id=final;
+	 const result=indexToColSpec(j);//converting colmums to index
+	 let cell_id = result +i;
+	 this.myMap.set(cell_id,new CellInfo(cell_id,0,0,0,0))
 	}
+	
      }
     }
 
@@ -51,19 +53,19 @@ export default class Spreadsheet
    */
   async eval(baseCellId, expr)
   {
-
     const updates = {};
-    CellInfo.id=baseCellId;
-    CellInfo.expr=expr;
-    const parseOutput= parse(CellInfo.expr,CellInfo.id);
+    const parseOutput= parse(expr,baseCellId);
 
     console.log("*****************TO PRINT AST**************************");
     console.log(inspect(parseOutput,false,Infinity));//To print AST
     console.log("type is", parseOutput.type);
     
     const val= auxEval(parseOutput);
-    
-    updates[CellInfo.id]=val;
+    updates[baseCellId]=val;
+   // console.log("my map", this.myMap.get(baseCellId));
+    let existingCellInfo = this.myMap.get(baseCellId);
+    existingCellInfo.value =val;
+    console.log("my map", this.myMap.get(baseCellId));
     return updates;
 
    
@@ -74,26 +76,27 @@ export default class Spreadsheet
 	{
 	  return output.value;
    	}
+
+	/*if(output.type === 'ref')
+        {
+		console.log("ref",output.value)
+	}*/	
+
+
 	if(output.type=== 'app')
 	{
-		//console.log("output",output);
-		console.log("output.kids",output.kids);
-		//console.log("output.kids[0].value",output.kids[0].value);
-	    //const kidsList=evalKids(output.kids);
-            //console.log("list", kidsList);
-
+	   console.log("output.kids",output.kids);
 	    let kidsList = [];
 	    for(let i=0;i<output.kids.length;i++)
 	    {
 		kidsList.push(auxEval(output.kids[i]));
 	    }
-	  
+	
 	    switch(output.fn)
             {
                 case '+':
 
                 var result= FNS['+'](...kidsList);
-                //updates[CellInfo.id]=Sum;
                 break;
 
                 case '-':
@@ -110,42 +113,11 @@ export default class Spreadsheet
                 break;
            }
 	    
-	   
-	   /*function evalKids(output)
-	   {
-		//console.log("output length",output.length);
-		let i=0; let j = output.length;
-		let kidsList = [];
-		//console.log("type of input value",typeof output.kids.value);
-                while(j!== 0 && typeof output[i].value!== 'undefined')
-                {
-
-                        //console.log("length :" , output.kids.length);
-                        console.log("kid ",i, " value:" , output[i].value);
-                        kidsList.push(output[i].value);
-			auxEval(output[i]);
-                        i++;
-                        j--;
-                        
-                }
-		console.log("type", typeof output.kids[i].value);
-		if(typeof input[i].value === 'undefined')
-		{
-		console.log("output.kids[i].kids",output.kids[i].kids);
-		
-			evalKids(output.kids[i].kids);
-		}
-		console.log("kidsList",kidsList);
-		return kidsList;
-	    }*/
-
-	   
 	 return result;   
        }
 
-
    }
-  //TODO add methods
+  
 }
 
 }
