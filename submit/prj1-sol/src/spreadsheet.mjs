@@ -3,21 +3,22 @@ import AppError from './app-error.mjs';
 
 import { cellRefToCellId } from './util.mjs';
 import { indexToColSpec } from './util.mjs';
+import { indexToRowSpec } from './util.mjs';
 import LIMITS from './limits.mjs';
 
 //use for development only
 import { inspect } from 'util';
 
-class CellInfo{
-
-constructor(id,expr,value,dependents,ast)
+class CellInfo
 {
-   this.id=id;
-   this.expr=expr;
-   this.value=0;
-this.dependents=dependents;
-this.ast=ast;
-}
+      constructor(id,expr,value,dependents,ast)
+      {
+	this.id=id;
+   	this.expr=expr;
+   	this.value=0;
+   	this.dependents=dependents;
+   	this.ast=ast;
+      }
 }
 
 export default class Spreadsheet
@@ -35,12 +36,13 @@ export default class Spreadsheet
 	for(let j=0;j<LIMITS.MAX_N_COLS;j++)
     	{
 	 const result=indexToColSpec(j);//converting colmums to index
-	 let cell_id = result +i;
-	 this.myMap.set(cell_id,new CellInfo(cell_id,0,0,0,0))
+	 let cell_id = result +i; 
+	 //console.log("cell_id",cell_id);
+	 this.myMap.set(cell_id,new CellInfo(cell_id,' ',0,0,0))
 	}
 	
      }
-    }
+   }
 
   /** Set cell with id baseCellId to result of evaluating formula
    *  specified by the string expr.  Update all cells which are
@@ -58,13 +60,29 @@ export default class Spreadsheet
 
     console.log("*****************TO PRINT AST**************************");
     console.log(inspect(parseOutput,false,Infinity));//To print AST
-    console.log("type is", parseOutput.type);
-    
-    const val= auxEval(parseOutput);
+
+   
+    let val= auxEval(parseOutput);
+    console.log("type",typeof(val));  
     updates[baseCellId]=val;
-   // console.log("my map", this.myMap.get(baseCellId));
-    let existingCellInfo = this.myMap.get(baseCellId);
-    existingCellInfo.value =val;
+
+    let presentCellInfo = this.myMap.get(baseCellId);
+    
+    if(typeof(val) === 'string')
+    {
+     console.log("equal",this.myMap.get(val));
+     console.log("value is",this.myMap.get(val).value);
+     presentCellInfo.value=this.myMap.get(val).value;
+     console.log("presentCellInfo.value",presentCellInfo.value);
+     updates[baseCellId]=presentCellInfo.value;
+    }
+    else
+    {
+	presentCellInfo.value =val;
+    	console.log("presentCellInfo.value",presentCellInfo.value);//22
+	updates[baseCellId]=val;
+    }
+
     console.log("my map", this.myMap.get(baseCellId));
     return updates;
 
@@ -76,12 +94,6 @@ export default class Spreadsheet
 	{
 	  return output.value;
    	}
-
-	/*if(output.type === 'ref')
-        {
-		console.log("ref",output.value)
-	}*/	
-
 
 	if(output.type=== 'app')
 	{
@@ -116,6 +128,16 @@ export default class Spreadsheet
 	 return result;   
        }
 
+       if(output.type=== 'ref')
+       {
+		console.log("refCol",indexToColSpec(output.value.col.index));
+		console.log("refRow",indexToRowSpec(output.value.row.index));
+		let refCol = indexToColSpec(output.value.col.index);
+		let refRow = indexToRowSpec(output.value.row.index);
+		let cellRef = refCol + refRow;
+		console.log("returning",cellRefToCellId(cellRef));
+		return cellRef;
+       }
    }
   
 }
