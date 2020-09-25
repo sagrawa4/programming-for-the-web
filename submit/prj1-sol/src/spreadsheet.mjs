@@ -47,117 +47,25 @@ export default class Spreadsheet
      }
    }
 
-  /** Set cell with id baseCellId to result of evaluating formula
-   *  specified by the string expr.  Update all cells which are
-   *  directly or indirectly dependent on the base cell.  Return an
-   *  object mapping the id's of all dependent cells to their updated
-   *  values.  User errors must be reported by throwing a suitable
-   *  AppError object having code property set to `SYNTAX` for a
-   *  syntax error and `CIRCULAR_REF` for a circular reference
-   *  and message property set to a suitable error message.
-   */
 
-
- /*  async auxEvaltest(output)
-   {
-        console.log("output",output);
-        if(output.type=== 'num')
-        {
-          return output.value;
-        }
-
-        else if(output.type=== 'ref')
-        {
-                console.log("map",this.myMap);
-                console.log("inside ref",output);
-                console.log("refCol",indexToColSpec(output.value.col.index));
-                console.log("refRow",(output.value.row.index));
-                let refCol = indexToColSpec(output.value.col.index);
-                let refRelativeRow =parseInt(output.value.row.index);
-                console.log("refRelativeRow ",refRelativeRow );
-                console.log("baseCellId",baseCellId);
-                let baseRow= parseInt(this.myMap.get(baseCellId).row);
-                //console.log("spreadsheet",spreadmap.get(baseCellId).row);
-                console.log("baseRow",baseRow);
-                let absRow = baseRow + refRelativeRow;
-                console.log("absRow",absRow);
-                let cellRef = refCol + absRow;
-                let refvalue= spreadmap.get(cellRef).value;
-                console.log("refvalue",refvalue);
-                //console.log("returning",cellRefToCellId(cellRef));
-                return refvalue;
-       }
-
-        else if(output.type=== 'app')
-        {
-           console.log("output.kids for app",output.kids);
-	   let kidsList = [];
-            for(let i=0;i<output.kids.length;i++)
-            {
-                kidsList.push(auxEval(output.kids[i]));
-            }
-
-            switch(output.fn)
-            {
-                case '+':
-
-                var result= FNS['+'](...kidsList);
-                break;
-
-                case '-':
-
-                result= FNS['-'](...kidsList);
-                break;
-
-                case '*':
-                result= FNS['*'](...kidsList);
-                break;
-
-                case '/':
-                result= FNS['/'](...kidsList);
-                break;
-           }
-
-         return result;
-       }
-}*/
   async eval(baseCellId, expr)
   {
     const updates = {};
     const parseOutput= parse(expr,baseCellId);
 
-    console.log("*****************TO PRINT AST**************************");
-    console.log(inspect(parseOutput,false,Infinity));//To print AST
+   // console.log("*****************TO PRINT AST**************************");
+   // console.log(inspect(parseOutput,false,Infinity));//To print AST
    
-    let val= auxEval(parseOutput,this.myMap);
-
-   // updates[baseCellId]=val;
-    console.log("base",baseCellId);
-    console.log("this.myMap.get(baseCellId)",this.myMap.get(baseCellId));
-    let presentCellInfo = this.myMap.get(baseCellId);
-   // console.log("presentCellInfo",presentCellInfo);
-   // console.log("Conversion",toString(baseCellId));
-    /*if(typeof(val) === 'string')
-    {
-    
-     console.log("equal",this.myMap.get(val));
-    // console.log("value is",this.myMap.get(val).value);
-    // presentCellInfo.value=this.myMap.get(val).value;
-     console.log("presentCellInfo.value",presentCellInfo.value);
-     //updates[baseCellId]=presentCellInfo.value;
-    }*/
+	let val= auxEval(parseOutput,this.myMap);
+    	let presentCellInfo = this.myMap.get(baseCellId);
     	presentCellInfo.value =val;
-    	console.log("presentCellInfo.value",presentCellInfo.value);//22
 	updates[baseCellId]=val;
     
-
-    //console.log("my map", this.myMap.get(baseCellId));
-    return updates;
+	return updates;
 
    
    function auxEval(output,spreadmap)
    {
-	console.log("output",output);
 	if(output.type=== 'num')
 	{
 	  return output.value;
@@ -165,29 +73,17 @@ export default class Spreadsheet
 
 	else if(output.type=== 'ref')
      	{
-		console.log("spread",spreadmap);
-		console.log("inside ref",output);
-     	        console.log("refCol",indexToColSpec(output.value.col.index));
-                console.log("refRow",(output.value.row.index));
                 let refCol = indexToColSpec(output.value.col.index);
                 let refRelativeRow =parseInt(output.value.row.index);
-		console.log("refRelativeRow ",refRelativeRow );
-		console.log("baseCellId",baseCellId);
 		let baseRow= parseInt(spreadmap.get(baseCellId).row);
-		console.log("spreadsheet",spreadmap.get(baseCellId).row);
-		console.log("baseRow",baseRow);
 		let absRow = baseRow + refRelativeRow;
-		console.log("absRow",absRow);
 		let cellRef = refCol + absRow;
 		let refvalue= spreadmap.get(cellRef).value;
-		console.log("refvalue",refvalue);
-		//console.log("returning",cellRefToCellId(cellRef));
                 return refvalue;
        }
        
 	else if(output.type=== 'app')
 	{
-	   console.log("output.kids for app",output.kids);
 	    let kidsList = [];
 	    for(let i=0;i<output.kids.length;i++)
 	    {
