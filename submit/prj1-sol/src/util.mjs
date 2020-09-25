@@ -31,7 +31,7 @@ function rowSpecToIndex(rowSpec) {
 function indexToRowSpec(index, baseIndex=0) {
   console.assert(index < LIMITS.MAX_N_ROWS,
 		 `bad row index ${index}; must be under ${LIMITS.MAX_N_ROWS}`);
-  return String(baseIndex + index + 2);//manual change
+  return String(baseIndex + index + 1);
 }
 
 export {
