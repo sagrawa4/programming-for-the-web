@@ -21,29 +21,56 @@ const MONGO_CONNECT_OPTIONS = { useUnifiedTopology: true };
  *  `DB`: database error.
  */
 
-export default class PersistentSpreadsheet {
+
+
+export default class PersistentSpreadsheet{
 
   //factory method
   static async make(dbUrl, spreadsheetName) {
-    try {
-      //@TODO set up database info, including reading data
+  try 
+    {
+
+      //connect to mongo
+      const client = await mongo.connect(dbUrl, MONGO_CONNECT_OPTIONS);
+
+      //get database name
+      const db = client.db();
+      console.log(`db ${db.databaseName}`);
+
+      //get the name of the collection
+      const collect = db.collection(spreadsheetName);
+      console.log(collect.collectionName);
+
+      //instance for mem spreadsheet created
+      const mem = new MemSpreadsheet();
+ 
+      return new PersistentSpreadsheet(mem,collect, client);
     }
+    
     catch (err) {
       const msg = `cannot connect to URL "${dbUrl}": ${err}`;
-      throw [ new AppError('DB', msg) ];
+      throw new AppError('DB', msg);
     }
-    return new PersistentSpreadsheet(/* @TODO params */);
+
   }
 
-  constructor(/* @TODO params */) {
+  constructor(mem, mongoCollection,mongoClient) {
     //@TODO
+    this.mem=mem;
+    this.client=mongoClient;
+    this.collect=mongoCollection;
   }
 
   /** Release all resources held by persistent spreadsheet.
    *  Specifically, close any database connections.
    */
   async close() {
-    //@TODO
+  try {
+	await this.client.close();
+	}
+  catch(err){
+      throw new AppError('DB', err.toString());
+      }
   }
 
   /** Set cell with id baseCellId to result of evaluating string
@@ -52,14 +79,21 @@ export default class PersistentSpreadsheet {
    *  of all dependent cells to their updated values.
    */
   async eval(baseCellId, formula) {
-    const results = /* @TODO delegate to in-memory spreadsheet */ {}; 
-    try {
-      //@TODO
+    const results = this.mem.eval(baseCellId, formula);
+    console.log('results ' , results);
+    try 
+    {
+      //updating the database
+      console.log("inside try");
+      await this.collect.insertOne({id: baseCellId, formula: formula, value: results});
+      const updates = await this.collect.find({}).toArray();
+      console.log("updates: ", updates);
+      
     }
     catch (err) {
       //@TODO undo mem-spreadsheet operation
-      const msg = `cannot update "${baseCellId}: ${err}`;
-      throw [ new AppError('DB', msg) ];
+      const msg = `cannot update "${baseCellId}": ${err}`;
+      throw new AppError('DB', msg);
     }
     return results;
   }
@@ -68,16 +102,26 @@ export default class PersistentSpreadsheet {
    *  return { value: 0, formula: '' } for an empty cell.
    */
   async query(cellId) {
-    return /* @TODO delegate to in-memory spreadsheet */ {}; 
+    //no db opertn.. we assume our in mem contain correct data..
+    //dont read from db
+    const updates = await this.collect.find({}).toArray();
+    console.log("updates for query: ", updates);
+    return this.mem.query(cellId);  
   }
 
   /** Clear contents of this spreadsheet */
   async clear() {
-    try {
+    this.mem.clear();
+    try 
+    {
       //@TODO
+      await this.collect.deleteMany({});
+      const updates = await this.collect.find({}).toArray();
+      console.log("updates: ", updates); 
+
     }
     catch (err) {
-      const msg = `cannot drop collection ${this.spreadsheetName}: ${err}`;
+      const msg = `cannot drop collection ${this.collect}: ${err}`;
       throw [ new AppError('DB', msg) ];
     }
     /* @TODO delegate to in-memory spreadsheet */
@@ -118,12 +162,13 @@ export default class PersistentSpreadsheet {
       }
       catch (err) {
 	//@TODO undo mem-spreadsheet operation
-	const msg = `cannot update "${destCellId}: ${err}`;
-	throw [ new AppError('DB', msg) ];
+	const msg = `cannot update ${destCellId}: ${err}`;
+	throw new AppError('DB', msg);
       }
       return results;
     }
-  }
+    }
+  
 
   /** Return dump of cell values as list of cellId and formula pairs.
    *  Do not include any cell's with empty formula.
@@ -150,7 +195,7 @@ export default class PersistentSpreadsheet {
   async dump() {
     return /* @TODO delegate to in-memory spreadsheet */ []; 
   }
-
 }
+const MONGO_URL = 'mongodb://localhost:27017';
 
 //@TODO auxiliary functions

@@ -30,8 +30,10 @@ export default class MemSpreadsheet {
     try {
       this._undos = {};
       const cellId = cellRefToCellId(baseCellId);
+      console.log("cellId" ,cellId)
       const oldAst = this._cells[cellId]?.ast;
       const ast = parse(formula, cellId);
+      console.log("ast" ,ast)
       const cell = this._updateCell(cellId, cell => cell.ast = ast);
       if (oldAst) this._removeAsDependent(cellId, oldAst);
       const updates = this._evalCell(cell, new Set());
@@ -47,14 +49,32 @@ export default class MemSpreadsheet {
    *  return { value: 0, formula: '' } for an empty cell.
    */
   query(cellId) {
-    //@TODO
-    return { };
+    const bcell= cellRefToCellId(cellId);
+    const cell = this.getCell(bcell);
+    console.log("cellinfo:  " ,cell);
+    if(cell.id)
+    {
+      console.log('value:', cell.value,'formula: ', cell.formula);
+      return {'value': cell.value,'formula': cell.formula};
+    }
+    else
+    {
+      console.log('value:', cell.value,'formula: ', cell.formula);
+      return {'value':0 , 'formula': ''};
+    }
   }
 
+  //Function to get the CellInfo
+  getCell(cellId) {
+    const id = cellId.replace(/\$/g, '');
+    const cell = this._cells[id];
+    return cell ?? (this._cells[id] = new CellInfo(id, this));
+  }
+  
   /** Clear contents of this spreadsheet. No undo information recorded. */
   clear() {
     this._undos = {};
-    //@TODO
+    this._cells= {};
   }
 
   /** Delete all info for cellId from this spreadsheet. Return an
