@@ -63,13 +63,6 @@ export default class MemSpreadsheet {
       return {'value':0 , 'formula': ''};
     }
   }
-
-  //Function to get the CellInfo
-  getCell(cellId) {
-    const id = cellId.replace(/\$/g, '');
-    const cell = this._cells[id];
-    return cell ?? (this._cells[id] = new CellInfo(id, this));
-  }
   
   /** Clear contents of this spreadsheet. No undo information recorded. */
   clear() {
@@ -84,9 +77,21 @@ export default class MemSpreadsheet {
   delete(cellId) {
     this._undos = {};
     const results = {};
-    //@TODO
-    return results;
+    const bcell= cellRefToCellId(cellId);
+    const cell = this.getCell(bcell);
+    console.log("cellinfo delete :  " ,cell);
+    const del =this.eval(bcell,'0')
+    console.log("del" , del);
+    return {'id':cell.dependents };
   }
+
+  //Function to get the CellInfo
+  getCell(cellId) {
+    const id = cellId.replace(/\$/g, '');
+    const cell = this._cells[id];
+    return cell ?? (this._cells[id] = new CellInfo(id, this));
+  }
+
 
   /** copy formula from srcCellId to destCellId, adjusting any
    *  relative cell references suitably.  Return an object mapping the

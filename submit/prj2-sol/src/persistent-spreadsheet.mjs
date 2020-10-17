@@ -132,17 +132,26 @@ export default class PersistentSpreadsheet{
    *  values.  
    */
   async delete(cellId) {
-    let results;
-    results = /* @TODO delegate to in-memory spreadsheet */ {}; 
+    let updates;
     try {
-      //@TODO
+      this.mem.delete(cellId); 
+     updates= await this.collect.find({}).toArray();
+      for(let i of updates)
+      {
+        console.log("i", i);
+        if(i.id===cellId)
+        {
+          console.log("inside");
+          updates = await this.collect.deleteOne({_id:i});
+        }
+      } 
     }
     catch (err) {
       //@TODO undo mem-spreadsheet operation
-      const msg = `cannot delete ${cellId}: ${err}`;
+      const msg = `cannot delete "${cellId}": ${err}`;
       throw [ new AppError('DB', msg) ];
     }
-    return results;
+    return updates;
   }
   
   /** copy formula from srcCellId to destCellId, adjusting any
