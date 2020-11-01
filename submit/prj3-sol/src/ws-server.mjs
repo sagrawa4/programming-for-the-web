@@ -45,12 +45,48 @@ const STORE = 'store';
 
 function setupRoutes(app) {
   app.use(cors(CORS_OPTIONS));  //needed for future projects
+  app.use(bodyParser.json());  //use json bodyparser
+  app.get(`/${BASE}/${STORE}/:id`, doGet(app));
+  app.delete(`/${BASE}/${STORE}/:test-ss`, doDelete(app));
+  
+  app.use(do404(app));
+  app.use(doErrors(app));
   //@TODO add routes to handlers
 }
 
 /****************************** Handlers *******************************/
 
 //@TODO
+
+function doGet(app) {
+  return (async function(req, res) {
+    try {
+      const id = req.params.id;
+      const results = await app.locals.ssStore.readFormulas(id);
+	res.json(results);
+    }
+    catch(err) {
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doDelete(app) {
+  return (async function(req, res) {
+    try {
+      const id = req.params.id;
+      //console.log("id" , id);
+      const results = await app.locals.ssStore.clear(id);
+       res.status(NO_CONTENT).json(results);
+      //res.json({});
+    }
+    catch(err) {
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
 
 /** Default handler for when there is no route for a particular method
  *  and path.
