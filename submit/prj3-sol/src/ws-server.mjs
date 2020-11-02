@@ -47,7 +47,14 @@ function setupRoutes(app) {
   app.use(cors(CORS_OPTIONS));  //needed for future projects
   app.use(bodyParser.json());  //use json bodyparser
   app.get(`/${BASE}/${STORE}/:id`, doGet(app));
-  app.delete(`/${BASE}/${STORE}/:test-ss`, doDelete(app));
+  app.delete(`/${BASE}/${STORE}/:id`, doClear(app));
+  app.patch(`/${BASE}/${STORE}/:id`, doUpdate(app));
+  app.put(`/${BASE}/${STORE}/:id`, doReplace(app));
+
+
+  app.patch(`/${BASE}/${STORE}/:id/:cell`, doUpdateCell(app));
+  app.delete(`/${BASE}/${STORE}/:id/:cell`, doDeleteCell(app));
+  app.put(`/${BASE}/${STORE}/:id/:cell`, doReplaceCell(app));
   
   app.use(do404(app));
   app.use(doErrors(app));
@@ -72,14 +79,12 @@ function doGet(app) {
   });
 }
 
-function doDelete(app) {
+function doClear(app) {
   return (async function(req, res) {
     try {
       const id = req.params.id;
-      //console.log("id" , id);
       const results = await app.locals.ssStore.clear(id);
        res.status(NO_CONTENT).json(results);
-      //res.json({});
     }
     catch(err) {
       const mapped = mapError(err);
@@ -88,6 +93,102 @@ function doDelete(app) {
   });
 }
 
+function doUpdate(app){
+  return (async function(req,res){
+    try {
+    	console.log("req.body" , req.body);
+        for (const [cellId, formula] of req.body)
+	{
+          await app.locals.ssStore.updateCell(req.params.id,cellId, formula)
+	}
+
+        res.status(NO_CONTENT).json()
+    }
+     catch (err){
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  })
+}
+
+function doUpdateCell(app){
+  return (async function(req,res){
+  try {
+      console.log("req.params.id" , req.params.id);
+      console.log(" req.params.cell" , req.params.cell);
+      console.log("req.body.formula" , req.body.formula);
+      if(req.body.formula !== undefined)
+      {
+	await app.locals.ssStore.updateCell(req.params.id, req.params.cell, req.body.formula);
+       	console.log("out");
+	res.status(NO_CONTENT).json()
+	console.log("end");
+      }
+      else
+      {
+	throw 'Formula undefined';
+      }
+  }
+  catch (err)
+  {
+	    const result =
+	    {
+		status: BAD_REQUEST,
+            	error: { code: "BAD_REQUEST", message : "request body must be a { formula } object" },
+   	    }
+   res.status(BAD_REQUEST).json(result);
+  }
+})
+}
+
+
+function doDeleteCell(app) {
+  return (async function (req, res) {
+    try {
+      await app.locals.ssStore.delete(req.params.id,req.params.cell)
+      //res.json({});
+      res.status(NO_CONTENT).json();
+    }
+    catch (err) {
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doReplace(app) {
+  return (async function(req, res) {
+    try {
+     await app.locals.ssStore.clear(req.params.id);
+      console.log("print",req.body);
+      for (const [cellId, formula] of req.body)
+        {
+          await app.locals.ssStore.updateCell(req.params.id,cellId, formula)
+        }
+	res.status(CREATED).json()
+    }
+    catch(err) {
+      const result = {
+            status: BAD_REQUEST,
+            error: { code: "BAD_REQUEST", message : "request body must be a list of cellId, formula pairs" },
+      };
+      res.status(BAD_REQUEST).json(result);
+    }
+  });
+}
+
+function doReplaceCell(app) {
+  return (async function(req, res) {
+    try {
+      await app.locals.ssStore.updateCell(req.params.id,req.params.cell, req.body.formula);
+      res.status(CREATED).json()
+    }
+    catch(err) {
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
 /** Default handler for when there is no route for a particular method
  *  and path.
  */
