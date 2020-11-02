@@ -46,15 +46,15 @@ const STORE = 'store';
 function setupRoutes(app) {
   app.use(cors(CORS_OPTIONS));  //needed for future projects
   app.use(bodyParser.json());  //use json bodyparser
-  app.get(`/${BASE}/${STORE}/:id`, doGet(app));
-  app.delete(`/${BASE}/${STORE}/:id`, doClear(app));
-  app.patch(`/${BASE}/${STORE}/:id`, doUpdate(app));
-  app.put(`/${BASE}/${STORE}/:id`, doReplace(app));
+  app.get(`/${BASE}/${STORE}/:id`, doGet(app)); //retrieve data from spreadsheet
+  app.delete(`/${BASE}/${STORE}/:id`, doClear(app)); //clear the content of spreadsheet
+  app.patch(`/${BASE}/${STORE}/:id`, doUpdate(app)); //updates the collection with the data in the request body
+  app.put(`/${BASE}/${STORE}/:id`, doReplace(app)); //replaces the collection with the data in the request body
 
 
-  app.patch(`/${BASE}/${STORE}/:id/:cell`, doUpdateCell(app));
-  app.delete(`/${BASE}/${STORE}/:id/:cell`, doDeleteCell(app));
-  app.put(`/${BASE}/${STORE}/:id/:cell`, doReplaceCell(app));
+  app.patch(`/${BASE}/${STORE}/:id/:cell`, doUpdateCell(app)); //updates the formula for the cell specified by CELL_ID in the spreadsheet 
+  app.delete(`/${BASE}/${STORE}/:id/:cell`, doDeleteCell(app)); //delete the cell specified by CELL_ID in the spreadsheet
+  app.put(`/${BASE}/${STORE}/:id/:cell`, doReplaceCell(app)); //replaces the formula for the cell specified by CELL_ID in the spreadsheet
   
   app.use(do404(app));
   app.use(doErrors(app));
@@ -63,8 +63,7 @@ function setupRoutes(app) {
 
 /****************************** Handlers *******************************/
 
-//@TODO
-
+//return all the data for the spreadsheet
 function doGet(app) {
   return (async function(req, res) {
     try {
@@ -79,6 +78,7 @@ function doGet(app) {
   });
 }
 
+//clear out all the data for the spreadsheet
 function doClear(app) {
   return (async function(req, res) {
     try {
@@ -93,6 +93,7 @@ function doClear(app) {
   });
 }
 
+//update the data for the spreadsheet 
 function doUpdate(app){
   return (async function(req,res){
     try {
@@ -111,6 +112,7 @@ function doUpdate(app){
   })
 }
 
+//update the formula for the cell specified by CELL_ID in the spreadsheet
 function doUpdateCell(app){
   return (async function(req,res){
   try {
@@ -141,7 +143,7 @@ function doUpdateCell(app){
 })
 }
 
-
+//delete the cell specified by CELL_ID in the spreadsheet 
 function doDeleteCell(app) {
   return (async function (req, res) {
     try {
@@ -155,7 +157,7 @@ function doDeleteCell(app) {
     }
   });
 }
-
+//replace all the data for the spreadsheet named SS_NAME with the data in the request body
 function doReplace(app) {
   return (async function(req, res) {
     try {
@@ -177,6 +179,7 @@ function doReplace(app) {
   });
 }
 
+//replace the formula for the cell specified by CELL_ID in the spreadsheet
 function doReplaceCell(app) {
   return (async function(req, res) {
     try {
