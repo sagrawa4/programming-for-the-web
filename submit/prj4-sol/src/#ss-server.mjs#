@@ -52,7 +52,6 @@ function setupRoutes(app) {
 
 }
 
-//@TODO add handlers
 
 /** Default handler for when there is no route for a particular method
  *  and path.
