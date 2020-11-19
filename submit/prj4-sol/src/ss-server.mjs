@@ -22,7 +22,7 @@ const CONFLICT = 409;
 const SERVER_ERROR = 500;
 
 const __dirname = Path.dirname(new URL(import.meta.url).pathname);
-
+console.log("dir path", __dirname);
 export default function serve(port, store) {
   process.chdir(__dirname);
   const app = express();
@@ -43,6 +43,7 @@ function setupRoutes(app) {
   app.use(bodyParser.urlencoded({extended: true}));
   
   //@TODO add routes
+  app.get('/',openSS(app));
   //must be last
   app.use(do404(app));
   app.use(doErrors(app));
@@ -54,6 +55,16 @@ function setupRoutes(app) {
 /** Default handler for when there is no route for a particular method
  *  and path.
  */
+
+function openSS(app) {
+  return async function(req, res) {
+  console.log("req.body", req.body);
+  let errors = validateField(req.body);
+  res.status(CREATED).
+  send(app.locals.mustache.render('Open',
+					{Open: [{ msg: store, }]  }));
+  };
+ };
 function do404(app) {
   return async function(req, res) {
     const message = `${req.method} not supported for ${req.originalUrl}`;

@@ -25,8 +25,6 @@ export default class SSClient {
 
   constructor(url) {
     const axiosInstance = axios.create({baseURL: url});
-    console.log("URL with axiosInstance",axiosInstance);
-    console.log("URL is ", url);
     this.baseurl=url;
     this.axios = axiosInstance;
   }
@@ -35,7 +33,7 @@ export default class SSClient {
   async updateCell(ssName, cellId, formula) {
     try {
     console.log("My formula", formula);
-     const response = await this.axios.patch(`${this.baseurl}/${BASE}/{ssName}/{cellId}`, formula);
+     const response = await this.axios.patch(`${this.baseurl}/${BASE}/{ssName}/{cellId}`, {formula:formula});
      return response.data;
     }
     catch (err) {
