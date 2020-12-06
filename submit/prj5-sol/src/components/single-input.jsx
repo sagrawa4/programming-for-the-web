@@ -13,18 +13,34 @@ import ReactDom from 'react-dom';
  *              widget whenever it is blurred or its containing
  *              form submitted.
  */
+
+
 export default class SingleInput extends React.Component {
 
   constructor(props) {
     super(props);
-    //@TODO
+      //@TODO
+      this.state = {
+	  value: '' ||props.value,
+	  error: ''
+      }
   }
 
-  //@TODO
+  //@TODO                                                                       
 
   render() {
-    //@TODO
-    return '';
+      return(
+	 // <form>
+          <label htmlFor="ssName">Open Spreadsheet Name
+          <input type="text" id={this.props.id} value={this.state.value} label={this.props.label} />
+          <br />
+	  </label>
+         // <span className = "error">{this.state.error}
+	 // </span>
+	 // </label>
+         // </form>
+      );
   }
 
 }
+
