@@ -32,7 +32,16 @@ export default class App extends React.Component {
 
 
     async update(ssName) {
-	
+	if (ssName.match(/^[\w\- ]+$/)) {
+      const spreadsheet = await Spreadsheet.make(ssName, this.props.ssClient);
+      this.setState({ssName, spreadsheet});
+    }
+    else {
+      throw new Error(`
+        Spreadsheet name must contain one-or-more alphanumerics, hyphen or
+        space characters.
+      `);
+    }
 
   }
 

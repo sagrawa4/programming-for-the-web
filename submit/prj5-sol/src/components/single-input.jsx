@@ -19,44 +19,55 @@ export default class SingleInput extends React.Component {
 
   constructor(props) {
     super(props);
-      //@TODO
-      this.state = {
-	  value: '' ||props.value,
-	  error: ''
-      };
-      this.handleChange = this.handleChange.bind(this);
-      this.onBlur = this.onBlur.bind(this);
+
+    this.onSubmit = this.onSubmit.bind(this);
+    this.onChange = this.onChange.bind(this);
+
+    this.state = {
+      error: '',
+      value: this.props.value ?? '',
+    };
      
   }
 
-    //@TODO
-    handleChange(event){
-	this.setState({value:event.target.value});
-    }
+  onChange(ev) {
+    const value = ev.target.value;
+    this.setState({value, error: '',});
+  }
 
-    onBlur(event){
-	alert('A spreadsheet is submitted:' + this.state.value);
-	try{
-	    this.props.update(this.state.value);
-	    event.preventDefault();
-	}
-	catch(err) {
-	    const msg = (err.message) ? err.message : 'webservice error';
-	    this.setState({error: [msg]});
-	}
+  async onSubmit(ev) {
+    ev.preventDefault();
+    try {
+      const value = this.state.value.trim();
+      await this.props.update(value);
+      this.setState({error: ''});
     }
+    catch (err) {
+      this.setState({error: err.message});
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.id !== prevProps.id) {
+      this.setState({error: '', value: this.props.value ?? '', });
+    }
+  }
+    
     
 
   render() {
-      return(
-	  <form onblur={this.onBlur} onSubmit={this.onBlur}>
-          <label htmlFor="ssName">Open Spreadsheet Name
-            <input type="text" id={this.props.id} value={this.state.value} label={this.props.label} onChange={this.handleChange} />
-          <br />
-	  <span className={this.state.error}></span>
-	  </label>
-         </form>
-      );
+      const { id, label, } = this.props;
+    return (
+      <form onSubmit={this.onSubmit}>
+        <label htmlFor={id}>{label}</label>
+        <span>
+          <input name={id} onBlur={this.onSubmit} onChange={this.onChange}
+                 value={this.state.value} id={id}/>
+          <br/>
+          <span className="error">{this.state.error}</span>
+        </span>
+      </form>
+    );
   }
 
 }
